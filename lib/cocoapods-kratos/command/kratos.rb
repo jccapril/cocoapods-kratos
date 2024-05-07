@@ -24,10 +24,23 @@ module Pod
         Longer description of cocoapods-kratos.
       DESC
 
-      self.arguments = 'NAME'
+      self.arguments = [
+        CLAide::Argument.new('NAME', true),
+        CLAide::Argument.new('SOURCE', false)
+      ]
+
+      def self.options
+        [
+          ['--force',     'Overwrite existing files.'],
+        ]
+      end
 
       def initialize(argv)
         @name = argv.shift_argument
+        @source = argv.shift_argument
+        @force = argv.flag?('force')
+
+        @spec = spec_with_path(@name)
         super
       end
 
@@ -38,6 +51,16 @@ module Pod
 
       def run
         UI.puts "Add your implementation for the cocoapods-kratos plugin in #{__FILE__}"
+        UI.puts "The name of the Pod is #{@name}"
+        UI.puts "The spec of the Pod is #{@spec}"
+        if @source
+          UI.puts "The source of the Pod is #{@source}"
+        end
+        if @force
+          UI.puts "Overwrite existing files".red
+        else
+          UI.puts "Not overwrite existing files".blue
+        end
       end
     end
   end
