@@ -1,2 +1,3 @@
-require 'cocoapods-kratos/command'
+require 'pod/command/kratos'
 require 'cocoapods-kratos/pod_utils'
+require 'cocoapods-kratos/mix_up/code_mix_up'
