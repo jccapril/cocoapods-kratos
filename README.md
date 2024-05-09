@@ -8,4 +8,4 @@ A description of cocoapods-kratos.
 
 ## Usage
 
-    $ pod spec kratos POD_NAME
+    $ pod kratos POD_NAME
