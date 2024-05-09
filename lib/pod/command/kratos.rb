@@ -62,7 +62,15 @@ module Pod
         # end
 
         JRCodeMixup.new(@spec.name, Dir.pwd, @old_class_prefix, @new_class_prefixes, @filter_file_prefixes)
-                 .run
+                 .run do |des_path, mixup, new_spec_file|
+          # 同步更新本地配置文件
+          # @spec = spec_with_path(new_spec_file)
+          # build_mixup
+          # `rm -rf #{des_path}`
+          # `rm #{new_spec_file}`
+          # `rm -rf .tmp` if Dir.exist?('.tmp')
+          # mixup.append_subspec
+        end
 
        end
 

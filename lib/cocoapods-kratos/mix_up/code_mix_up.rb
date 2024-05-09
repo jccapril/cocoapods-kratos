@@ -20,6 +20,7 @@ module Pod
       @new_class_prefixes.each do |new_class_prefix|
         @new_class_prefix = new_class_prefix
         @des_path = mixup
+        yield @des_path, self, @new_spec_file
       end
     end
 
@@ -101,14 +102,15 @@ module Pod
         new_name = is_not_in_filter ? name.gsub(@old_class_prefix, @new_class_prefix) : name
         new_file_path = is_not_in_filter ? "#{path.parent}/#{new_name}#{path.extname}" : file
         contents = File.open(file).read
-
         MixupFile.new(name, new_name, file, new_file_path, contents, is_not_in_filter)
       }.to_a
       puts "-> 正在处理[#{@old_class_prefix} >> #{@new_class_prefix}]代码混淆...".yellow
 
       # 开始混淆
+      # 修改引用
       @files.each { |file| mix_class_prefix(file) if file.is_not_in_filter }
 
+      # 修改文件名
       @files.each do |file|
         unless file.path.equal?(file.new_path) && !file.is_not_in_filter
           FileUtils.remove_file(file.path)
