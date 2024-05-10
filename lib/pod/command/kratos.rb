@@ -26,6 +26,7 @@ module Pod
           %w[--beta 构建beta组件],
           %w[--force 强制覆盖已存在的文件.],
           %w[--use-framework 基于framework仓库构建],
+          %w[--spec-sources 依赖组件的第三方仓库.默认为：https://cdn.cocoapods.org/],
           ['--embedded',  'Generate embedded frameworks.'],
           ['--library',   'Generate static libraries.'],
           ['--dynamic',   'Generate dynamic framework.'],
@@ -36,6 +37,8 @@ module Pod
       def initialize(argv)
         @name = argv.shift_argument
         @source = argv.shift_argument
+        @spec_sources = argv.option('spec-sources', 'https://cdn.cocoapods.org/').split(',')
+
         @source_dir = Dir.pwd
         @is_spec_from_path = false
         @spec = spec_with_path(@name)
