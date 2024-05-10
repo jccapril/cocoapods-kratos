@@ -30,6 +30,10 @@ module Pod
           ['--embedded',  'Generate embedded frameworks.'],
           ['--library',   'Generate static libraries.'],
           ['--dynamic',   'Generate dynamic framework.'],
+          ['--no-mangle', 'Do not mangle symbols of depedendant Pods.'],
+          ['--bundle-identifier', 'Bundle identifier for dynamic framework'],
+          ['--exclude-deps', 'Exclude symbols from dependencies.'],
+          ['--configuration', 'Build the specified configuration (e.g. Debug). Defaults to Release'],
           %w[--upgrade-swift 升级Swift版本]
         ]
       end
@@ -39,19 +43,11 @@ module Pod
         @source = argv.shift_argument
         @spec_sources = argv.option('spec-sources', 'https://cdn.cocoapods.org/').split(',')
 
-        @source_dir = Dir.pwd
-        @is_spec_from_path = false
-        @spec = spec_with_path(@name)
-        @is_spec_from_path = true if @spec
-        @spec ||= spec_with_name(@name)
-        @force = argv.flag?('force', false)
-        @local = argv.flag?('local', false)
-        @archs = argv.option('archs', 'arm64').split(',')
-        @clean_sandbox = argv.flag?('clean', true)
-
         @embedded = argv.flag?('embedded')
         @library = argv.flag?('library')
         @dynamic = argv.flag?('dynamic')
+
+        @config = argv.option('configuration', 'Release')
 
         @package_type = if @embedded
                           :static_framework
@@ -62,6 +58,20 @@ module Pod
                         else
                           :static_framework
                         end
+
+        @source_dir = Dir.pwd
+        @is_spec_from_path = false
+        @spec = spec_with_path(@name)
+        @is_spec_from_path = true if @spec
+        @spec ||= spec_with_name(@name)
+        @force = argv.flag?('force', false)
+        @mangle = argv.flag?('mangle', false)
+        @bundle_identifier = argv.option('bundle-identifier', nil)
+        @exclude_deps = argv.flag?('exclude-deps', false) || @package_type == :static_framework
+        @local = argv.flag?('local', false)
+        @archs = argv.option('archs', 'arm64').split(',')
+        @clean_sandbox = argv.flag?('clean', true)
+
 
         # 代码混淆配置项
         @mixup = argv.flag?('mixup', false)
@@ -149,7 +159,7 @@ module Pod
           `rm -rf #{des_path}`
           `rm #{new_spec_file}`
           `rm -rf .tmp` if Dir.exist?('.tmp')
-          # mixup.append_subspec
+          mixup.append_subspec
         end
 
       end
@@ -247,11 +257,52 @@ module Pod
         end_time = (Time.now.to_f * 1000).to_i
         duration = end_time - begin_time
         UI.puts "-> 依赖检查完成 [#{duration / 1000.0} sec]".green
+
+        begin
+          begin_time = (Time.now.to_f * 1000).to_i
+          UI.puts "-> 正在构建:#{@spec.name}...".yellow
+          perform_build(platform, static_sandbox, dynamic_sandbox, static_installer)
+          end_time = (Time.now.to_f * 1000).to_i
+
+          duration = end_time - begin_time
+          UI.puts "-> 构建完成 [#{duration / 1000.0} sec]".green
+        ensure # in case the build fails; see Builder#xcodebuild.
+          Pathname.new(config.sandbox_root).rmtree
+          FileUtils.rm_f('Podfile.lock')
+        end
+
       end
 
+      def perform_build(platform, static_sandbox, dynamic_sandbox, static_installer)
+        static_sandbox_root = config.sandbox_root.to_s
 
-      def build_static_sandbox
+        if @dynamic
+          static_sandbox_root = "#{static_sandbox_root}/#{static_sandbox.root.to_s.split('/').last}"
+          dynamic_sandbox_root = "#{config.sandbox_root}/#{dynamic_sandbox.root.to_s.split('/').last}"
+        end
 
+        builder = Pod::JRBuilder.new(
+          platform,
+          static_installer,
+          @source_dir,
+          static_sandbox_root,
+          dynamic_sandbox_root,
+          static_sandbox.public_headers.root,
+          @spec,
+          @embedded,
+          @mangle,
+          @dynamic,
+          @config,
+          @bundle_identifier,
+          @exclude_deps,
+          @archs
+        )
+
+
+        builder.build(@package_type)
+
+        return unless @embedded
+        builder.link_embedded_resources
       end
 
     end

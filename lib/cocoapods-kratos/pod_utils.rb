@@ -61,7 +61,9 @@ module Pod
 
           install!('cocoapods',
                    :integrate_targets => false,
-                   :deterministic_uuids => false)
+                   :deterministic_uuids => false,
+                   # 关闭多个同源警告输出
+                   :warn_for_multiple_pod_sources => false,)
 
           target('packager') do
             inherit! :complete

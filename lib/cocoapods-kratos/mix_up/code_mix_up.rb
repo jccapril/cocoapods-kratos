@@ -231,9 +231,47 @@ module Pod
     end
 
     public
-    # 添加subspec 依赖
+    # 添加subspec
     def append_subspec
-      puts "-> [append_subspec]".green
+      content = File.open(@spec_file).read.to_s
+      # 已添加subspec跳过
+      return content unless content.gsub(/\s{2}s\.subspec '#{@new_class_prefix}[\w\W]*?\bend/).to_a.empty?
+
+      # 获取原有的subspec
+      framework_spec_contents = content.gsub(/\s{2}s\.subspec 'CoreFramework[\w\W]*?\bend/).to_a
+      file_urls = content.gsub(/:http => "https:\/\/gitlab.v.show\/api\/v4\/projects\/(\d+)\/#\{zip_file_path}%2F#\{s.name.to_s}-#\{s.version.to_s}\.zip\/raw\?ref=main",/).to_a
+
+      if framework_spec_contents.empty? || file_urls.empty?
+        puts "-> podspec配置不正确，请检查#{@spec_file}s.source、CoreFramework字段。".red
+        `rm -rf #{@des_path}`
+        `rm -rf .tmp` if Dir.exist?('.tmp')
+        Process.exit(1)
+      end
+      framework_spec_content = framework_spec_contents.first.to_s
+
+      new_framework_spec_content = framework_spec_content.gsub(@spec_name, @new_spec_name)
+      new_framework_spec_content = new_framework_spec_content.gsub('CoreFramework', "#{@new_class_prefix}")
+
+      spec_content = <<-SPEC
+#{framework_spec_content}
+
+  # 以下为脚本依赖CoreFramework自动生成代码，勿动⚠️⚠️ 如CoreFramework有改动请删除。
+#{new_framework_spec_content}
+      SPEC
+      content.gsub!(framework_spec_content, spec_content)
+
+      # 插入下载地址
+      file_url = file_urls.first.to_s
+      new_file_url = file_url.gsub(/\#{s.name.to_s}/, @new_spec_name)
+      new_file_url.gsub!(":http", ":http_#{@new_class_prefix}")
+
+      http_url = <<~SOURCE
+        #{file_url}
+              #{new_file_url}
+      SOURCE
+      content.gsub!(file_url, http_url.chomp) unless content.include?(new_file_url)
+
+      File.open(@spec_file, 'w') {|fw| fw.write(content) }
     end
 
 
