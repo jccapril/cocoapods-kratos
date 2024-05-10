@@ -192,6 +192,7 @@ module Pod
       begin_time = (Time.now.to_f * 1000).to_i
       puts "-> 正在处理图片hash混淆...".yellow
 
+      # 过滤 包含 AnimationImages 和 Logo -  的图片
       Dir.glob("#{@des_path}/**/*@*x.png")
          .filter {|f| f.gsub('AnimationImages').count == 0 && f.gsub('Logo - ').count == 0 }
          .each {
@@ -200,6 +201,7 @@ module Pod
            `#{command}`
       }
 
+      # 过滤 包含 AnimationImages 和 Logo -  的图片
       Dir.glob("#{@des_path}/**/*.{jpeg,jpg}")
         .filter {|f| f.gsub('AnimationImages').count == 0 && f.gsub('Logo - ').count == 0 }
         .each {
@@ -226,6 +228,12 @@ module Pod
       duration = end_time - begin_time
       puts "-> [#{@new_spec_name}.podspec]混淆处理完成 [#{duration / 1000.0} sec]".green
 
+    end
+
+    public
+    # 添加subspec 依赖
+    def append_subspec
+      puts "-> [append_subspec]".green
     end
 
 

@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Pod::Kratos::VERSION
   spec.authors       = ['JiangChencheng']
   spec.email         = ['jiangchencheng0409@gmail.com']
-  spec.description   = %q{A short description of cocoapods-kratos.}
-  spec.summary       = %q{A longer description of cocoapods-kratos.}
+  spec.description   = %q{混淆、制作二进制库}
+  spec.summary       = %q{混淆、制作二进制库}
   spec.homepage      = 'https://github.com/EXAMPLE/cocoapods-kratos'
   spec.license       = 'MIT'
 
