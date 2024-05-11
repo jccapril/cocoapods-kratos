@@ -134,8 +134,6 @@ module Pod
         # 处理Swift版本
         @version = "#{@version}.swift-#{@swift_version}" if swift_version_support? && is_swift_library?
 
-        UI.puts "-> current version is [#{@version}]".red
-
         unless @mixup
           build
         end
