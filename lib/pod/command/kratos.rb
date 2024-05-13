@@ -135,7 +135,7 @@ module Pod
         # 处理Swift版本
         @version = "#{@version}.swift-#{@swift_version}" if swift_version_support? && is_swift_library?
 
-        @uploader = Pod::JRPackageUploader.new(@spec.name, @spec.attributes_hash['summary'], @version, @upload, @source_dir, @from_wukong)
+        @uploader = Pod::JRPackageUploader.new(@spec.name, @spec.attributes_hash['summary'], @version, @upload, @source_dir)
 
         unless @mixup
           build
@@ -199,6 +199,19 @@ module Pod
         build_package
         `mv "#{@work_dir}" "#{@target_dir}"`
         Dir.chdir(@source_dir)
+
+        @zip_files << @uploader.create_zip_file("#{@spec.name}-#{@version}.zip", @target_dir, vendored_frameworks)
+      end
+
+            # 查找依赖
+      def vendored_frameworks
+        @spec.subspecs
+             .filter { |subspec| subspec.attributes_hash['vendored_frameworks'] != nil }
+             .map { |subspec| subspec.attributes_hash['vendored_frameworks'] }
+             .filter { |path| path != "#{@spec.attributes_hash['name']}.framework" }
+             .uniq
+             .flat_map { |path| filter_dynamic_frameworks(path) }
+             .uniq
       end
 
       def create_target_directory
