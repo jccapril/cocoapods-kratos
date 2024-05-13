@@ -242,7 +242,7 @@ module Pod
       file_urls = content.gsub(/:http => "https:\/\/gitlab.v.show\/api\/v4\/projects\/(\d+)\/#\{zip_file_path}%2F#\{s.name.to_s}-#\{s.version.to_s}\.zip\/raw\?ref=main",/).to_a
 
       if framework_spec_contents.empty? || file_urls.empty?
-        puts "-> podspec配置不正确，请检查#{@spec_file}s.source、CoreFramework字段。".red
+        puts "-> podspec配置不正确，请检查#{@spec_file} s.source、CoreFramework字段。".red
         `rm -rf #{@des_path}`
         `rm -rf .tmp` if Dir.exist?('.tmp')
         Process.exit(1)
