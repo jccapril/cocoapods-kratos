@@ -214,6 +214,14 @@ module Pod
              .uniq
       end
 
+            # 过滤动态库
+            def filter_dynamic_frameworks(path)
+              Dir.glob(path).filter {|file|
+                file_name = Pathname(file).basename.to_s.split(".").first
+                `file #{file}/#{file_name}`.to_s.gsub(":Mach-O dynamically linked shared library").count.positive?
+              }
+            end
+
       def create_target_directory
         target_dir = "#{@source_dir}/#{@spec.name}-#{@spec.version}"
         if File.exist? target_dir
