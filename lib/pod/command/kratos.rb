@@ -18,6 +18,7 @@ module Pod
           %w[--archs 生成的架构.默认为：`arm64`],
           %w[--local 使用本地版本构建.],
           %w[--mixup 开启构建时代码混淆功能.],
+          %w[--no-upload 是否将生成的zip文件自动上传到GitLab服务器，默认自动上传。],
           %w[--old-class-prefix 混淆时修改的类前缀.默认为：`BT`],
           %w[--new-class-prefixes 混淆时要修改的目标类前缀，多个用,隔开.默认为：`MNL`],
           %w[--filter-file-prefixes 混淆时要忽略的文件前缀，多个用,隔开.默认为：`Target_`],
@@ -42,7 +43,7 @@ module Pod
         @name = argv.shift_argument
         @source = argv.shift_argument
         @spec_sources = argv.option('spec-sources', 'https://cdn.cocoapods.org/').split(',')
-
+        @upload = argv.flag?('upload', true)
         @embedded = argv.flag?('embedded')
         @library = argv.flag?('library')
         @dynamic = argv.flag?('dynamic')
@@ -133,6 +134,8 @@ module Pod
 
         # 处理Swift版本
         @version = "#{@version}.swift-#{@swift_version}" if swift_version_support? && is_swift_library?
+
+        @uploader = Pod::JRPackageUploader.new(@spec.name, @spec.attributes_hash['summary'], @version, @upload, @source_dir, @from_wukong)
 
         unless @mixup
           build
